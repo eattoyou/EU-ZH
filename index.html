@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歐盟亞洲移民市場互動儀表板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals (Slate, Zinc, Stone) -->
+    <!-- Application Structure Plan: 本應用採用單頁儀表板佈局。頂部是全局概覽和核心控制項（國家選擇器）。選擇一個國家後，下方四個內容卡片（國家概況、移民來源國、超市分佈、餐廳類型）會動態更新對應的數據和圖表。這種設計將複雜的數據分解為易於理解的模組，使用者可以透過單一互動（選擇國家）來探索所有相關資訊，流程直觀且高效。此結構優先考慮使用者探索的便利性，而非嚴格遵循報告的線性結構。 -->
+    <!-- Visualization & Content Choices:
+        - 移民比例 (比較): 使用 Chart.js 長條圖展示各國亞洲移民比例，便於快速比較。此圖表已調整為將英國數據固定顯示在最後。
+        - 移民來源國 (比例): 使用 Chart.js 環圈圖呈現單一國家內不同移民來源的佔比，直觀展示構成。圖例標籤已新增百分比資訊。互動：懸停顯示詳細百分比。
+        - 餐廳數量 (比較): 使用 Chart.js 長條圖比較不同菜系的餐廳數量。互動：懸停顯示數量範圍。
+        - 超市與概況 (告知): 使用結構化的 HTML/Tailwind 卡片顯示文字資訊，清晰易讀，尤其將超市列表調整為每項獨立一行，並更新了英國主要城市超市數量資訊為預估數字。
+        - 各國亞洲餐廳數量總覽: 新增單一長條圖，展示各國亞洲餐廳的總平均數量。為了與移民比例圖表區分，此圖表採用了新的綠色系調色盤，並且英國數據固定顯示在最後。
+        - Justification: 選擇的圖表類型最適合對應數據的目標（比較、看比例）。所有圖表均使用 Chart.js 基於 Canvas 實現，互動性強且符合無 SVG 的要求。超市列表的調整提高了該區塊的可讀性。移民來源國圖例增加百分比提升了數據可讀性。英國城市超市數據的補充提高了資訊完整性與精確度（基於搜尋結果的估計）。
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        /* 針對比較圖表調整高度 */
+        .comparison-chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px; /* 增加最大寬度 */
+            margin-left: auto;
+            margin-right: auto;
+            height: 500px; /* 固定高度 */
+            max-height: 60vh;
+        }
+
+        .main-title {
+            background: linear-gradient(to right, #4f46e5, #9333ea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header class="text-center mb-8">
+            <div class="flex flex-col items-center justify-center mb-4">
+                <!-- LOGO 圖片已放大3倍 (h-72 w-72) -->
+                <img src="https://www.weichuanusa.com/wp-content/uploads/2024/02/Logo.svg" onerror="this.src='https://placehold.co/100x100/transparent/transparent?text=Company+Logo'" alt="Company Logo" class="h-72 w-72 mb-0">
+                <h1 class="text-4xl md:text-5xl font-bold main-title">歐盟地區，亞洲移民市場圖表</h1>
+            </div>
+            <!-- 縮小了與標題之間的空隙 (mt-1) -->
+            <p class="mt-1 text-lg text-slate-600">深入探索歐盟各國的亞洲社群概況、市場潛力與飲食文化</p>
+        </header>
+
+        <section id="main-dashboard" class="bg-white p-6 rounded-2xl shadow-lg">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-slate-700 mb-2">探索各國數據 (依移民數量排序)</h2>
+                <!-- 下拉式選單說明已更新 -->
+                <p class="text-slate-500 mb-4">請從下拉選單中選擇一個國家，下方的圖表和資訊將會即時更新。</p>
+                <select id="country-selector" class="w-full md:w-1/3 bg-slate-100 border-2 border-slate-200 rounded-lg p-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                
+                <div id="profile-card" class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
+                        <span class="mr-2">🌍</span>國家概況
+                    </h3>
+                    <div id="profile-content" class="space-y-3 text-slate-700"></div>
+                </div>
+
+                <div id="supermarket-card" class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
+                        <span class="mr-2">🛒</span>主流亞超/主要城市數量
+                    </h3>
+                    <div id="supermarket-content" class="space-y-3 text-slate-700"></div>
+                </div>
+
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-4 text-center">移民主要來源國佔比</h3>
+                    <div class="chart-container">
+                        <canvas id="immigrant-origin-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-4 text-center">亞洲餐廳數量分佈</h3>
+                    <div class="chart-container">
+                        <canvas id="restaurant-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="comparison-section" class="mt-8 bg-white p-6 rounded-2xl shadow-lg">
+             <h2 class="text-2xl font-bold text-slate-700 mb-2">各國亞洲移民比例總覽</h2>
+             <p class="mt-4 text-slate-500 mb-4">此圖表展示了報告中所有國家的亞洲移民佔總人口的比例，其中英國數據固定顯示在最後，讓您能夠快速進行橫向比較。</p>
+            <div class="comparison-chart-container">
+                <canvas id="comparison-chart"></canvas>
+            </div>
+        </section>
+
+        <!-- 新增的各國亞洲餐廳數量總覽圖表區域 -->
+        <section id="restaurant-comparison-section" class="mt-8 bg-white p-6 rounded-2xl shadow-lg">
+             <h2 class="text-2xl font-bold text-slate-700 mb-2">各國亞洲餐廳數量總覽</h2>
+             <p class="mt-4 text-slate-500 mb-4">此圖表展示了報告中所有國家亞洲餐廳的估計總數，其中英國數據固定顯示在最後，讓您能夠快速進行橫向比較。</p>
+            <div class="comparison-chart-container">
+                <canvas id="restaurant-comparison-chart"></canvas>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="text-center p-4 mt-8 text-sm text-slate-500">
+        <p>數據來源：歐盟亞洲移民-超市-餐廳數量概況報告。圖表與數據僅供參考。</p>
+    </footer>
+
+    <script>
+        const reportData = [
+            { country: "德國", totalPop: 83.78, immigrantPop: 5.44, immigrantRatio: 6.5, sources: "土耳其 (2.1%), 中國 (1.2%), 越南 (0.9%), 其他 (2.3%), 台灣(<0.05%)", characteristics: "西歐，工業中心；飲食以肉類和馬鈴薯為主，如德國香腸、豬腳。啤酒文化盛行。", supermarkets: ["東方超市Go Asia (約63間門市)", "Vinh‑Loi Asien Supermarkt (約5間門市)", "Eurumart (韓式網購到府配送)", "Ochama京東 (網購到府配送)", "柏林，約95間", "慕尼黑，約48間", "漢堡，約33間", "法蘭克福，約28間"], restaurants: { "中餐": [4000, 6000], "亞洲自助餐": [1000, 1500], "日本餐": [2000, 3000], "泰國餐": [1000, 1500], "越南餐": [1000, 1500], "其他": [800, 1200] } },
+            { country: "法國", totalPop: 65.27, immigrantPop: 4.57, immigrantRatio: 7.0, sources: "越南 (1.8%), 中國 (0.8%), 柬/老 (1.2%), 其他 (3.2%), 台灣(<0.05%)", characteristics: "西歐，前殖民地背景；飲食精緻，注重食材品質和烹飪技巧，如鵝肝、馬卡龍。", supermarkets: ["陳氏兄弟超市 Tang Frères (約22間門市)", "Paris Store (約21間門市)", "Le Carré Asian (網購到府配送)", "Ochama京東 (網購到府配送)", "巴黎，約116間", "里昂，約15間"], restaurants: { "中餐": [3000, 4000], "亞洲自助餐": [500, 800], "日本餐": [2000, 3000], "泰國餐": [800, 1200], "越南餐": [800, 1200], "其他": [300, 600] } },
+            { country: "義大利", totalPop: 60.46, immigrantPop: 2.54, immigrantRatio: 4.2, sources: "菲律賓 (1.1%), 中國 (0.9%), 印度 (0.7%), 其他 (1.5%), 台灣(<0.1%)", characteristics: "南歐，製造業密集；飲食以麵食和披薩為主，如義大利麵、提拉米蘇。", supermarkets: ["米蘭，約45間", "羅馬，約30間", "Kathay.it (網購到府配送)", "8TTO MARKET (網購到府配送)"], restaurants: { "中餐": [3000, 4000], "亞洲自助餐": [600, 1000], "日本餐": [2500, 3500], "泰國餐": [200, 400], "越南餐": [100, 200], "其他": [300, 600] } },
+            { country: "西班牙", totalPop: 46.75, immigrantPop: 1.64, immigrantRatio: 3.5, sources: "中國 (1.1%), 菲律賓 (1.0%), 巴基斯坦 (0.6%), 其他 (0.8%), 台灣(<0.1%)", characteristics: "南歐，服務業主導；飲食豐富多樣，海鮮和肉類菜餚居多，如西班牙海鮮燉飯、Tapas。", supermarkets: ["巴塞隆納，約50間", "馬德里，約45間", "Oriental Mart (網購到府配送)", "天天購亞洲食品超市 (網購到府配送)"], restaurants: { "中餐": [2500, 3500], "亞洲自助餐": [500, 800], "日本餐": [3000, 4000], "泰國餐": [400, 600], "越南餐": [100, 200], "其他": [300, 500] } },
+            { country: "荷蘭", totalPop: 17.13, immigrantPop: 1.37, immigrantRatio: 8.0, sources: "土耳其 (2.3%), 印尼 (1.5%), 中國 (0.7%), 其他 (3.5%), 台灣(<0.05%)", characteristics: "西歐，貿易樞紐；飲食簡樸，以乳製品和蔬菜為主，如荷蘭鬆餅、乳酪。", supermarkets: ["Amazing Oriental (約25間門市)", "Ochama京東 (網購到府配送)", "Asia Express Food (網購到府配送)", "阿姆斯特丹，約25間", "海牙，約13間"], restaurants: { "中餐": [1500, 2000], "亞洲自助餐": [400, 600], "日本餐": [1000, 1300], "印尼餐": [500, 800], "泰國餐": [300, 500], "越南餐": [80, 150], "其他": [200, 400] } },
+            { country: "瑞典", totalPop: 10.10, immigrantPop: 0.61, immigrantRatio: 6.0, sources: "敘利亞/伊拉克 (3.2%), 中國 (0.5%), 泰國 (0.4%), 其他 (1.9%), 台灣(<0.05%)", characteristics: "北歐，難民接收國；飲食以魚類、肉丸和漿果為主，如瑞典肉丸、鯡魚。", supermarkets: ["蘇黎世，約19間", "洛桑，約17間", "日內瓦，約15間", "Asia Markt (網購到府配送)"], restaurants: { "中餐": [600, 800], "亞洲自助餐": [300, 500], "日本餐": [800, 1000], "泰國餐": [400, 600], "越南餐": [50, 150], "其他": [400, 600] } },
+            { country: "比利時", totalPop: 11.59, immigrantPop: 0.58, immigrantRatio: 5.0, sources: "土耳其 (1.8%), 印度 (0.9%), 中國 (0.6%), 其他 (1.7%), 台灣(<0.05%)", characteristics: "西歐，歐盟總部所在；飲食以薯條、巧克力和啤酒聞名，如比利時薯條、華夫餅。", supermarkets: ["布魯塞爾，約25間", "安特衛普，約17間", "Ochama京東 (網購到府配送)"], restaurants: { "中餐": [1500, 2000], "亞洲自助餐": [300, 500], "日本餐": [800, 1200], "泰國餐": [300, 500], "越南餐": [200, 400], "其他": [200, 400] } },
+            { country: "奧地利", totalPop: 9.01, immigrantPop: 0.50, immigrantRatio: 5.5, sources: "土耳其(2.5%), 敘利亞 (1.2%), 中國 (0.4%), 其他 (1.4%), 台灣(<0.05%)", characteristics: "中歐，難民比例高；飲食以糕點和肉類菜餚為主，如維也納炸肉排、薩赫蛋糕。", supermarkets: ["維也納，約45間"], restaurants: { "中餐": [800, 1200], "亞洲自助餐": [200, 400], "日本餐": [500, 800], "泰國餐": [250, 350], "越南餐": [150, 250], "其他": [200, 350] } },
+            { country: "波蘭", totalPop: 37.85, immigrantPop: 0.30, immigrantRatio: 0.8, sources: "越南 (0.4%), 中國 (0.2%), 其他 (0.2%), 台灣(<0.05%)", characteristics: "東歐，新興移民地；飲食以餃子、湯和肉類為主，如波蘭餃子、羅宋湯。", supermarkets: ["華沙，約20間"], restaurants: { "中餐": [800, 1200], "亞洲自助餐": [200, 400], "日本餐": [700, 1000], "泰國餐": [200, 350], "越南餐": [200, 350], "其他": [150, 300] } },
+            { country: "葡萄牙", totalPop: 10.27, immigrantPop: 0.26, immigrantRatio: 2.5, sources: "印度 (0.8%), 中國 (0.6%), 孟加拉 (0.5%), 其他 (0.6%), 台灣(<0.05%)", characteristics: "南歐，葡語移民與貿易中樞；飲食以海鮮和蛋撻聞名，如葡式蛋撻、烤沙丁魚。", supermarkets: ["里斯本， 20間", "波爾圖，10間"], restaurants: { "中餐": [200, 400], "亞洲自助餐": [80, 150], "日本餐": [250, 450], "泰國餐": [80, 150], "越南餐": [50, 100], "其他": [80, 150] } },
+            { country: "丹麥", totalPop: 5.79, immigrantPop: 0.24, immigrantRatio: 4.2, sources: "土耳其 (1.0%), 巴基斯坦 (0.9%), 中國 (0.4%), 其他 (1.9%), 台灣(<0.05%)", characteristics: "北歐，勞工與難民並存；飲食以開放式三明治和糕點為主，如丹麥酥。", supermarkets: ["哥本哈根，約46間"], restaurants: { "中餐": [300, 500], "亞洲自助餐": [100, 200], "日本餐": [300, 500], "泰國餐": [150, 250], "越南餐": [50, 100], "其他": [100, 200] } },
+            { country: "希臘", totalPop: 10.46, immigrantPop: 0.21, immigrantRatio: 2.0, sources: "巴基斯坦 (0.8%), 孟加拉 (0.6%), 中國 (0.3%), 其他 (0.3%), 台灣(<0.05%)", characteristics: "南歐，亞洲移民逐漸增加；飲食以地中海風味為主，如希臘沙拉、烤肉串。", supermarkets: ["雅典，約10–12間"], restaurants: { "中餐": [200, 350], "亞洲自助餐": [50, 100], "日本餐": [150, 250], "泰國餐": [80, 150], "越南餐": [20, 50], "其他": [50, 100] } },
+            { country: "捷克", totalPop: 10.69, immigrantPop: 0.21, immigrantRatio: 2.0, sources: "越南 (1.4%), 中國 (0.3%), 其他 (0.3%), 台灣(<0.05%)", characteristics: "中歐，越南社群多；飲食以烤肉和燉菜為主，如烤豬肘、捷克餃子。", supermarkets: ["布拉格，約25間"], restaurants: { "中餐": [250, 400], "亞洲自助餐": [80, 150], "日本餐": [200, 350], "泰國餐": [80, 150], "越南餐": [200, 350], "其他": [50, 100] } },
+            { country: "愛爾蘭", totalPop: 5.03, immigrantPop: 0.20, immigrantRatio: 4.0, sources: "印度 (1.5%), 菲律賓 (1.0%), 中國 (0.5%), 其他 (1.0%), 台灣(<0.05%)", characteristics: "西歐，科技與醫療導向；飲食以燉菜和馬鈴薯為主，如愛爾蘭燉肉、薯泥。", supermarkets: ["科克，約12間", "都柏林，約7間"], restaurants: { "中餐": [300, 500], "亞洲自助餐": [80, 150], "日本餐": [250, 400], "泰國餐": [150, 250], "越南餐": [30, 80], "其他": [80, 150] } },
+            { country: "匈牙利", totalPop: 9.66, immigrantPop: 0.12, immigrantRatio: 1.2, sources: "中國 (0.5%), 越南 (0.3%), 其他 (0.4%), 台灣(<0.05%)", characteristics: "東歐，投資移民；飲食以燉肉和辣味菜餚為主，如匈牙利燉牛肉。", supermarkets: ["布達佩斯，約20間"], restaurants: { "中餐": [200, 350], "亞洲自助餐": [50, 100], "日本餐": [150, 250], "泰國餐": [80, 150], "越南餐": [80, 150], "其他": [50, 100] } },
+            { country: "芬蘭", totalPop: 5.56, immigrantPop: 0.11, immigrantRatio: 2.0, sources: "中國 (0.5%), 伊拉克/敘利亞 (1.1%), 其他 (0.4%), 台灣(<0.05%)", characteristics: "北歐，科技與社會福祉國；飲食以魚類和漿果為主，如卡累利阿派。", supermarkets: ["赫爾辛基，約15間"], restaurants: { "中餐": [150, 250], "亞洲自助餐": [50, 100], "日本餐": [150, 250], "泰國餐": [80, 150], "越南餐": [30, 80], "其他": [50, 100] } },
+            { country: "盧森堡", totalPop: 0.67, immigrantPop: 0.04, immigrantRatio: 5.5, sources: "中國 (1.0%), 印度 (1.2%), 其他 (3.3%), 台灣(<0.05%)", characteristics: "西歐，小國高收入；飲食受法、德影響，如盧森堡香腸。", supermarkets: ["盧森堡市，約5間"], restaurants: { "中餐": [50, 100], "亞洲自助餐": [20, 40], "日本餐": [30, 60], "泰國餐": [20, 40], "越南餐": [10, 20], "其他": [10, 20] } },
+            { country: "馬爾他", totalPop: 0.52, immigrantPop: 0.02, immigrantRatio: 4.5, sources: "印度 (2.0%), 菲律賓 (1.0%), 其他 (1.5%), 台灣(<0.05%)", characteristics: "地中海島國，英語普及；飲食融合地中海風味，如兔肉燉菜、Pastizzi。", supermarkets: ["瓦萊塔，約6間"], restaurants: { "中餐": [20, 40], "亞洲自助餐": [10, 20], "日本餐": [15, 30], "泰國餐": [10, 20], "越南餐": [5, 10], "其他": [5, 10] } },
+            { country: "斯洛維尼亞", totalPop: 2.11, immigrantPop: 0.02, immigrantRatio: 0.8, sources: "中國 (0.3%), 印度/其他 (0.5%), 台灣(<0.05%)", characteristics: "中歐，商貿交流點；飲食受奧地利和義大利影響，如香腸、燉菜。", supermarkets: ["盧比安納，約6間"], restaurants: { "中餐": [20, 40], "亞洲自助餐": [5, 15], "日本餐": [10, 20], "泰國餐": [5, 15], "越南餐": [2, 5], "其他": [5, 10] } },
+            { country: "愛沙尼亞", totalPop: 1.33, immigrantPop: 0.01, immigrantRatio: 1.0, sources: "中國 (0.3%), 印度/孟加拉 (0.3%), 其他 (0.4%), 台灣(<0.05%)", characteristics: "波羅的海國家，科技發展；飲食以黑麵包和豬肉為主，如血腸。", supermarkets: ["塔林，5–6間"], restaurants: { "中餐": [20, 40], "亞洲自助餐": [5, 15], "日本餐": [10, 20], "泰國餐": [5, 15], "越南餐": [2, 5], "其他": [5, 10] } },
+            { country: "立陶宛", totalPop: 2.83, immigrantPop: 0.02, immigrantRatio: 0.7, sources: "中國 (0.3%), 印度 (0.2%), 其他 (0.2%), 台灣(<0.05%)", characteristics: "波羅的海國家；飲食以馬鈴薯和肉類為主，如馬鈴薯餃子。", supermarkets: ["維爾紐斯，約6間"], restaurants: { "中餐": [20, 40], "亞洲自助餐": [5, 15], "日本餐": [10, 20], "泰國餐": [5, 15], "越南餐": [2, 5], "其他": [5, 10] } },
+            { country: "拉脫維亞", totalPop: 1.89, immigrantPop: 0.01, immigrantRatio: 0.6, sources: "中國 (0.2%), 越南 (0.2%), 其他 (0.2%), 台灣(<0.05%)", characteristics: "波羅的海國家；飲食以黑麵包和乳製品為主，如拉脫維亞黑麵包。", supermarkets: ["里加，約5間"], restaurants: { "中餐": [20, 40], "亞洲自助餐": [5, 15], "日本餐": [10, 20], "泰國餐": [5, 15], "越南餐": [2, 5], "其他": [5, 10] } },
+            { country: "克羅埃西亞", totalPop: 3.87, immigrantPop: 0.02, immigrantRatio: 0.6, sources: "中國 (0.2%), 菲律賓 (0.2%), 其他 (0.2%), 台灣(<0.05%)", characteristics: "南歐，觀光業主導；飲食以海鮮和地中海風味為主，如Peka。", supermarkets: ["札格瑞布，約7間"], restaurants: { "中餐": [20, 40], "亞洲自助餐": [5, 15], "日本餐": [10, 20], "泰國餐": [5, 15], "越南餐": [2, 5], "其他": [5, 10] } },
+            { country: "保加利亞", totalPop: 6.46, immigrantPop: 0.04, immigrantRatio: 0.6, sources: "中國 (0.2%), 越南/其他 (0.4%), 台灣(<0.05%)", characteristics: "東南歐，工業轉型；飲食以乳製品和蔬菜為主，如保加利亞優格。", supermarkets: ["索非亞，約8間"], restaurants: { "中餐": [30, 60], "亞洲自助餐": [10, 20], "日本餐": [20, 40], "泰國餐": [10, 20], "越南餐": [5, 10], "其他": [10, 20] } },
+            { country: "羅馬尼亞", totalPop: 19.24, immigrantPop: 0.10, immigrantRatio: 0.5, sources: "中國 (0.2%), 土耳其* (0.1%), 其他 (0.2%), 台灣(<0.05%)", characteristics: "東歐，亞洲人口稀少；飲食以玉米粥和燉肉為主，如薩爾馬。", supermarkets: ["布加勒斯特，約14間"], restaurants: { "中餐": [80, 150], "亞洲自助餐": [20, 40], "日本餐": [50, 100], "泰國餐": [30, 60], "越南餐": [10, 20], "其他": [20, 40] } },
+            { country: "斯洛伐克", totalPop: 5.43, immigrantPop: 0.03, immigrantRatio: 0.5, sources: "越南 (0.3%), 中國 (0.1%), 其他 (0.1%), 台灣(<0.05%)", characteristics: "中歐，小型移民群體；飲食以馬鈴薯和乳酪為主，如羊奶酪麵疙瘩。", supermarkets: ["布拉提斯拉瓦，約6間"], restaurants: { "中餐": [30, 60], "亞洲自助餐": [10, 20], "日本餐": [20, 40], "泰國餐": [10, 20], "越南餐": [10, 20], "其他": [10, 20] } },
+            { country: "英國 (非歐盟)", totalPop: 67.6, immigrantPop: 5.76, immigrantRatio: 8.6, sources: "印度 (2.9%), 巴基斯坦 (2.5%), 孟加拉 (1.0%), 中國 (0.8%), 其他 (1.5%), 台灣(<0.01%)", characteristics: "西歐，多元文化中心；飲食以炸魚薯條、烤肉和英式早餐為主。", supermarkets: [
+                "Oseyo (最大韓亞連鎖, 約14+間分店)",
+                "Longdan (倫敦多家)",
+                "Tian Tian Market (倫敦多家)",
+                "Seoul Plaza (倫敦及其他城市有分店)",
+                "倫敦，約100-150間",
+                "曼徹斯特，約20-30間",
+                "伯明罕，約15-25間"
+            ], restaurants: { "中餐": [4000, 6000], "亞洲自助餐": [1000, 1500], "日本餐": [1500, 2500], "泰國餐": [800, 1200], "越南餐": [300, 500], "印度餐": [8000, 10000], "巴基斯坦餐": [3000, 4000], "菲律賓餐": [100, 200], "其他": [1000, 1500] } }
+        ];
+
+        let immigrantOriginChart, restaurantChart, comparisonChart, restaurantComparisonChart;
+        
+        const chartColors = {
+            primary: 'rgba(79, 70, 229, 0.8)',
+            primaryBg: 'rgba(79, 70, 229, 0.1)',
+            secondary: 'rgba(147, 51, 234, 0.8)',
+            secondaryBg: 'rgba(147, 51, 234, 0.1)',
+            accent: 'rgba(217, 70, 239, 0.8)',
+            accentBg: 'rgba(217, 70, 239, 0.1)',
+            neutral: 'rgba(100, 116, 139, 0.8)',
+            neutralBg: 'rgba(100, 116, 139, 0.1)',
+        };
+        
+        // 用於移民來源和單一國家餐廳圖表的調色盤 (保持原有風格)
+        const palette = [chartColors.primary, chartColors.secondary, chartColors.accent, '#7dd3fc', '#facc15', '#fb923c', '#4ade80'];
+
+        // 為「各國亞洲餐廳數量總覽」圖表定義一個新的綠色系調色盤，只用於單色調
+        const restaurantComparisonThemeColor = '#059669'; // Emerald 700 作為單一主題色
+
+        /**
+         * 解析來源字串，提取標籤和數值。
+         * @param {string} sourceStr - 來源字串，例如 "土耳其 (2.1%), 中國 (1.2%)"
+         * @returns {object} 包含標籤和數值的物件 { labels: [], values: [] }
+         */
+        function parseSourceString(sourceStr) {
+            const sources = sourceStr.split(', ').map(s => s.trim());
+            const data = { labels: [], values: [] };
+            sources.forEach(source => {
+                const match = source.match(/(.+?)\s?\((\S+?)(%?)\)/);
+                if (match) {
+                    const label = match[1].trim();
+                    let value = parseFloat(match[2].replace('<', '')); // 從 <0.05% 中提取 0.05
+                    if(!isNaN(value)) {
+                       data.labels.push(label);
+                       data.values.push(value);
+                    }
+                }
+            });
+            return data;
+        }
+        
+        /**
+         * 計算數值範圍的平均值。
+         * @param {number[]} range - 數值範圍陣列 [min, max]
+         * @returns {number} 平均值
+         */
+        function getAverage(range) {
+            if (!range || range.length !== 2) return 0;
+            return (range[0] + range[1]) / 2;
+        }
+
+        /**
+         * 更新儀表板中選定國家的資訊和圖表。
+         * @param {string} countryName - 國家名稱
+         */
+        function updateDashboard(countryName) {
+            const data = reportData.find(c => c.country === countryName);
+            if (!data) return;
+
+            const profileContent = document.getElementById('profile-content');
+            profileContent.innerHTML = `
+                <p><strong>總人口：</strong>${data.totalPop} 百萬</p>
+                <p><strong>亞洲移民數量：：</strong>≈${data.immigrantPop} 百萬</p>
+                <p><strong>亞洲移民比例：：</strong>≈${data.immigrantRatio}%</p>
+                <p><strong>地區特徵與飲食特色：：</strong>${data.characteristics}</p>
+            `;
+
+            const supermarketContent = document.getElementById('supermarket-content');
+            supermarketContent.innerHTML = `<ul class="list-disc list-inside text-slate-700 space-y-1">${data.supermarkets.map(item => `<li>${item}</li>`).join('')}</ul>`;
+
+            const sourceData = parseSourceString(data.sources);
+            if (immigrantOriginChart) immigrantOriginChart.destroy();
+            immigrantOriginChart = new Chart(document.getElementById('immigrant-origin-chart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: sourceData.labels,
+                    datasets: [{
+                        label: '移民主要來源國佔比',
+                        data: sourceData.values,
+                        backgroundColor: palette,
+                        borderColor: '#f8fafc',
+                        borderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                font: { size: 12 },
+                                // 自訂標籤生成以在圖例中包含百分比
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map(function(label, i) {
+                                            const value = data.datasets[0].data[i];
+                                            return {
+                                                text: `${label}: ${value}%`, // 顯示標籤及其百分比值
+                                                fillStyle: data.datasets[0].backgroundColor[i],
+                                                strokeStyle: data.datasets[0].borderColor[i],
+                                                lineWidth: data.datasets[0].borderWidth,
+                                                hidden: !chart.isDatasetVisible(0) || data.datasets[0].hidden,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            } 
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+
+            const restaurantData = data.restaurants;
+            const restaurantLabels = Object.keys(restaurantData);
+            const restaurantValues = restaurantLabels.map(label => getAverage(restaurantData[label]));
+            
+            if (restaurantChart) restaurantChart.destroy();
+            restaurantChart = new Chart(document.getElementById('restaurant-chart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: restaurantLabels,
+                    datasets: [{
+                        label: '餐廳平均數量',
+                        data: restaurantValues,
+                        backgroundColor: palette.map((color, i) => color.replace('0.8', '0.6')),
+                        borderColor: palette,
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(203, 213, 225, 0.3)'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const originalRange = restaurantData[label];
+                                    return `${label}: 約 ${originalRange[0]} ~ ${originalRange[1]} 間`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        /**
+         * 初始化各國亞洲移民比例總覽的柱狀圖。
+         */
+        function initializeComparisonChart() {
+            // Filter out UK data
+            const ukData = reportData.find(c => c.country.includes('英國'));
+            const otherCountries = reportData.filter(c => !c.country.includes('英國'));
+
+            // Sort other countries by immigrant ratio in descending order
+            const sortedOtherCountries = [...otherCountries].sort((a, b) => b.immigrantRatio - a.immigrantRatio);
+
+            // Combine sorted other countries with UK at the end
+            const finalSortedData = ukData ? [...sortedOtherCountries, ukData] : sortedOtherCountries;
+
+            const labels = finalSortedData.map(d => d.country);
+            const values = finalSortedData.map(d => d.immigrantRatio);
+            
+            if (comparisonChart) comparisonChart.destroy(); // Destroy existing chart if it exists
+            comparisonChart = new Chart(document.getElementById('comparison-chart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '亞洲移民比例 (%)',
+                        data: values,
+                        backgroundColor: (context) => {
+                            // Check if the label contains "英國"
+                            return context.chart.data.labels[context.dataIndex].includes('英國') ? chartColors.accent : chartColors.primaryBg;
+                        },
+                        borderColor: (context) => {
+                            // Check if the label contains "英國"
+                            return context.chart.data.labels[context.dataIndex].includes('英國') ? chartColors.accent : chartColors.primary;
+                        },
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '移民佔總人口比例 (%)'
+                            },
+                             grid: {
+                                color: 'rgba(203, 213, 225, 0.3)'
+                            }
+                        },
+                        x: {
+                             grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * 初始化各國亞洲餐廳數量總覽的柱狀圖（非堆疊），並使用單一主題顏色。
+         */
+        function initializeRestaurantComparisonChart() {
+            // 過濾出英國數據
+            const ukData = reportData.find(c => c.country.includes('英國'));
+            const otherCountries = reportData.filter(c => !c.country.includes('英國'));
+
+            // 計算每個國家的亞洲餐廳總平均數量並為排序準備
+            const restaurantTotalsForSorting = otherCountries.map(country => {
+                let totalAverage = 0;
+                for (const cuisine in country.restaurants) {
+                    totalAverage += getAverage(country.restaurants[cuisine]);
+                }
+                return {
+                    country: country.country,
+                    totalRestaurants: totalAverage
+                };
+            });
+
+            // 其他國家依餐廳總數降序排序
+            const sortedRestaurantData = [...restaurantTotalsForSorting].sort((a, b) => b.totalRestaurants - a.totalRestaurants);
+
+            // 如果有英國數據，計算其總平均數量並置於末尾
+            if (ukData) {
+                let ukTotalAverage = 0;
+                for (const cuisine in ukData.restaurants) {
+                    ukTotalAverage += getAverage(ukData.restaurants[cuisine]);
+                }
+                sortedRestaurantData.push({
+                    country: ukData.country,
+                    totalRestaurants: ukTotalAverage
+                });
+            }
+
+            const labels = sortedRestaurantData.map(d => d.country);
+            const values = sortedRestaurantData.map(d => d.totalRestaurants);
+            
+            if (restaurantComparisonChart) restaurantComparisonChart.destroy(); // 如果圖表已存在則銷毀
+            restaurantComparisonChart = new Chart(document.getElementById('restaurant-comparison-chart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '亞洲餐廳總數量 (估計)',
+                        data: values,
+                        backgroundColor: (context) => {
+                            // 檢查標籤是否包含 "英國"，並使用主題色或強調色
+                            return context.chart.data.labels[context.dataIndex].includes('英國') ? chartColors.accent : restaurantComparisonThemeColor;
+                        },
+                        borderColor: (context) => {
+                            // 檢查標籤是否包含 "英國"，並使用主題色或強調色
+                            return context.chart.data.labels[context.dataIndex].includes('英國') ? chartColors.accent : restaurantComparisonThemeColor;
+                        },
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }, // 單一柱狀圖不需要圖例
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = Math.round(context.raw);
+                                    return `${label}: 約 ${value} 間`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: false, // 不堆疊
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            stacked: false, // 不堆疊
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '亞洲餐廳總數量 (估計)'
+                            },
+                             grid: {
+                                color: 'rgba(203, 213, 225, 0.3)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const selector = document.getElementById('country-selector');
+            
+            // 將英國數據從其餘數據中分離，用於下拉選單排序
+            const ukDataForSelector = reportData.find(c => c.country.includes('英國'));
+            const otherCountriesForSelector = reportData.filter(c => !c.country.includes('英國'));
+
+            // 其他國家依移民數量降序排序
+            const sortedOtherCountriesForSelector = [...otherCountriesForSelector].sort((a, b) => b.immigrantPop - a.immigrantPop);
+
+            // 將排序後的其他國家與英國數據合併，英國數據置於末尾以用於下拉選單
+            const finalSortedDataForSelector = ukDataForSelector ? [...sortedOtherCountriesForSelector, ukDataForSelector] : sortedOtherCountriesForSelector;
+
+
+            finalSortedDataForSelector.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.country;
+                option.textContent = c.country;
+                selector.appendChild(option);
+            });
+
+            selector.addEventListener('change', (e) => {
+                updateDashboard(e.target.value);
+            });
+            
+            // 預設選中德國
+            selector.value = '德國';
+            updateDashboard('德國');
+            initializeComparisonChart();
+            initializeRestaurantComparisonChart(); // 初始化新的餐廳數量總覽圖表
+        });
+
+    </script>
+</body>
+</html>
