@@ -52,7 +52,7 @@
             <div class="flex flex-col items-center justify-center mb-4">
                 <!-- LOGO 圖片已調整為更具響應性，並增加上邊距以與標題拉開空間 -->
                 <img src="https://www.weichuanusa.com/wp-content/uploads/2024/02/Logo.svg" onerror="this.src='https://placehold.co/100x100/transparent/transparent?text=Company+Logo'" alt="Company Logo" class="max-h-72 w-auto mb-8 rounded-xl">
-                <h1 class="text-4xl md:text-5xl font-bold main-title">歐盟地區，亞洲移民市場圖表</h1>
+                <h1 class="text-4xl md:text-5xl font-bold main-title">歐盟+英國地區，亞洲移民市場圖表</h1>
             </div>
             <!-- 縮小了與標題之間的空隙 (mt-1) -->
             <p class="mt-1 text-lg text-slate-600">深入探索歐盟各國的亞洲社群概況、市場現況與飲食文化</p>
@@ -110,7 +110,16 @@
             </div>
         </section>
 
-        <!-- 新增的各國亞洲餐廳數量總覽圖表區域 -->
+        <!-- 新增的各國亞洲超市數量總覽圖表區域 -->
+        <section id="supermarket-comparison-section" class="mt-8 bg-white p-6 rounded-2xl shadow-lg">
+             <h2 class="text-2xl font-bold text-slate-700 mb-2">各國亞洲超市數量總覽</h2>
+             <p class="mt-4 text-slate-500 mb-4">此圖表展示了報告中所有國家亞洲超市的估計總數，其中英國數據固定顯示在最後，讓您能夠快速進行橫向比較。</p>
+            <div class="comparison-chart-container">
+                <canvas id="supermarket-comparison-chart"></canvas>
+            </div>
+        </section>
+
+        <!-- 原有的各國亞洲餐廳數量總覽圖表區域 -->
         <section id="restaurant-comparison-section" class="mt-8 bg-white p-6 rounded-2xl shadow-lg">
              <h2 class="text-2xl font-bold text-slate-700 mb-2">各國亞洲餐廳數量總覽</h2>
              <p class="mt-4 text-slate-500 mb-4">此圖表展示了報告中所有國家亞洲餐廳的估計總數，其中英國數據固定顯示在最後，讓您能夠快速進行橫向比較。</p>
@@ -119,7 +128,7 @@
             </div>
         </section>
 
-        <!-- 新增的各國亞洲食品批發總數圖表區域 -->
+        <!-- 原有的各國亞洲食品批發總數圖表區域 -->
         <section id="wholesaler-comparison-section" class="mt-8 bg-white p-6 rounded-2xl shadow-lg">
              <h2 class="text-2xl font-bold text-slate-700 mb-2">各國亞洲食品批發總數總覽</h2>
              <p class="mt-4 text-slate-500 mb-4">此圖表展示了報告中所有國家亞洲食品批發商的估計總數，其中英國數據固定顯示在最後，讓您能夠快速進行橫向比較。</p>
@@ -136,11 +145,11 @@
 
     <script>
         const reportData = [
-            { country: "德國", totalPop: 83.78, immigrantPop: 5.44, immigrantRatio: 6.5, sources: "土耳其 (2.1%), 中國 (1.2%), 越南 (0.9%), 其他 (2.3%), 台灣(<0.05%)", characteristics: "西歐，工業中心；飲食以肉類和馬鈴薯為主，如德國香腸、豬腳。啤酒文化盛行。", supermarkets: ["東方超市Go Asia (約63間門市)", "Vinh‑Loi Asien Supermarkt (約5間門市)", "Eurumart (韓式網購到府配送)", "Ochama京東 (網購到府配送)", "柏林，約95間", "慕尼黑，約48間", "漢堡，約33間", "法蘭克福，約28間"], wholesalers: ["DeLong GmbH", "Asia Express Food GmbH", "Transfood GmbH"], totalWholesalers: 20, restaurants: { "中餐": [4000, 6000], "亞洲自助餐": [1000, 1500], "日本餐": [2000, 3000], "泰國餐": [1000, 1500], "越南餐": [1000, 1500], "其他": [800, 1200] } },
-            { country: "法國", totalPop: 65.27, immigrantPop: 4.57, immigrantRatio: 7.0, sources: "越南 (1.8%), 中國 (0.8%), 柬/老 (1.2%), 其他 (3.2%), 台灣(<0.05%)", characteristics: "西歐，前殖民地背景；飲食精緻，注重食材品質和烹飪技巧，如鵝肝、馬卡龍。", supermarkets: ["陳氏兄弟超市 Tang Frères (約22間門市)", "Paris Store (約21間門市)", "Le Carré Asian (網購到府配送)", "Ochama京東 (網購到府配送)", "巴黎，約116間", "里昂，約15間"], wholesalers: ["K-Commerce", "Asia Food Import", "Hapi S.A.S."], totalWholesalers: 15, restaurants: { "中餐": [3000, 4000], "亞洲自助餐": [500, 800], "日本餐": [2000, 3000], "泰國餐": [800, 1200], "越南餐": [800, 1200], "其他": [300, 600] } },
-            { country: "義大利", totalPop: 60.46, immigrantPop: 2.54, immigrantRatio: 4.2, sources: "菲律賓 (1.1%), 中國 (0.9%), 印度 (0.7%), 其他 (1.5%), 台灣(<0.1%)", characteristics: "南歐，製造業密集；飲食以麵食和披薩為主，如義大利麵、提拉米蘇。", supermarkets: ["米蘭，約45間", "羅馬，約30間", "Kathay.it (網購到府配送)", "8TTO MARKET (網購到府配送)"], wholesalers: ["Asiantrade S.r.l.", "Union Trade S.r.l.", "Asia Food S.r.l."], totalWholesalers: 12, restaurants: { "中餐": [3000, 4000], "亞洲自助餐": [600, 1000], "日本餐": [2500, 3500], "泰國餐": [200, 400], "越南餐": [100, 200], "其他": [300, 600] } },
-            { country: "西班牙", totalPop: 46.75, immigrantPop: 1.64, immigrantRatio: 3.5, sources: "中國 (1.1%), 菲律賓 (1.0%), 巴基斯坦 (0.6%), 其他 (0.8%), 台灣(<0.1%)", characteristics: "南歐，服務業主導；飲食豐富多樣，海鮮和肉類菜餚居多，如西班牙海鮮燉飯、Tapas。", supermarkets: ["巴塞隆納，約50間", "馬德里，約45間", "Oriental Mart (網購到府配送)", "天天購亞洲食品超市 (網購到府配送)"], wholesalers: ["Oriental Market", "Asia Food Express", "Union Alimentaria"], totalWholesalers: 10, restaurants: { "中餐": [2500, 3500], "亞洲自助餐": [500, 800], "日本餐": [3000, 4000], "泰國餐": [400, 600], "越南餐": [100, 200], "其他": [300, 500] } },
-            { country: "荷蘭", totalPop: 17.13, immigrantPop: 1.37, immigrantRatio: 8.0, sources: "土耳其 (2.3%), 印尼 (1.5%), 中國 (0.7%), 其他 (3.5%), 台灣(<0.05%)", characteristics: "西歐，貿易樞紐；飲食簡樸，以乳製品和蔬菜為主，如荷蘭鬆餅、乳酪。", supermarkets: ["Amazing Oriental (約25間門市)", "Ochama京東 (網購到府配送)", "Asia Express Food (網購到府配送)", "阿姆斯特丹，約25間", "海牙，約13間"], wholesalers: ["Amazing Oriental Wholesale", "Asia Express Food B.V.", "Lucky Oriental Food"], totalWholesalers: 10, restaurants: { "中餐": [1500, 2000], "亞洲自助餐": [400, 600], "日本餐": [1000, 1300], "印尼餐": [500, 800], "泰國餐": [300, 500], "越南餐": [80, 150], "其他": [200, 400] } },
+            { country: "德國", totalPop: 83.78, immigrantPop: 5.44, immigrantRatio: 6.5, sources: "土耳其 (2.1%), 中國 (1.2%), 越南 (0.9%), 其他 (2.3%), 台灣(<0.05%)", characteristics: "西歐，工業中心；飲食以肉類和馬鈴薯為主，如德國香腸、豬腳。啤酒文化盛行。", supermarkets: ["東方超市Go Asia (約63間門市)", "Vinh‑Loi Asien Supermarkt (約5間門市)", "Eurumart (韓式網購到府配送)", "Ochama京東 (網購到府配送)", "柏林，約95間", "慕尼黑，約48間", "漢堡，約33間", "法蘭克福，約28間"], wholesalers: ["JFC", "DeLong GmbH", "Transfood GmbH"], totalWholesalers: 20, manualSupermarketCount: 208, restaurants: { "中餐": [4000, 6000], "亞洲自助餐": [1000, 1500], "日本餐": [2000, 3000], "泰國餐": [1000, 1500], "越南餐": [1000, 1500], "其他": [800, 1200] } },
+            { country: "法國", totalPop: 65.27, immigrantPop: 4.57, immigrantRatio: 7.0, sources: "越南 (1.8%), 中國 (0.8%), 柬/老 (1.2%), 其他 (3.2%), 台灣(<0.05%)", characteristics: "西歐，前殖民地背景；飲食精緻，注重食材品質和烹飪技巧，如鵝肝、馬卡龍。", supermarkets: ["陳氏兄弟超市 Tang Frères (約22間門市)", "Paris Store (約21間門市)", "Le Carré Asian (網購到府配送)", "Ochama京東 (網購到府配送)", "巴黎，約116間", "里昂，約15間"], wholesalers: ["NOS AMIS", "Foodex (原 Asia Food Import)"], totalWholesalers: 15, manualSupermarketCount: 131, restaurants: { "中餐": [3000, 4000], "亞洲自助餐": [500, 800], "日本餐": [2000, 3000], "泰國餐": [800, 1200], "越南餐": [800, 1200], "其他": [300, 600] } },
+            { country: "義大利", totalPop: 60.46, immigrantPop: 2.54, immigrantRatio: 4.2, sources: "菲律賓 (1.1%), 中國 (0.9%), 印度 (0.7%), 其他 (1.5%), 台灣(<0.1%)", characteristics: "南歐，製造業密集；飲食以麵食和披薩為主，如義大利麵、提拉米蘇。", supermarkets: ["米蘭，約45間", "羅馬，約30間", "Kathay.it (網購到府配送)", "8TTO MARKET (網購到府配送)"], wholesalers: ["Asiantrade S.r.l.", "Union Trade S.r.l.", "Todayfood (Ingrosso Alimentare Asiatico)"], totalWholesalers: 12, restaurants: { "中餐": [3000, 4000], "亞洲自助餐": [600, 1000], "日本餐": [2500, 3500], "泰國餐": [200, 400], "越南餐": [100, 200], "其他": [300, 600] } },
+            { country: "西班牙", totalPop: 46.75, immigrantPop: 1.64, immigrantRatio: 3.5, sources: "中國 (1.1%), 菲律賓 (1.0%), 巴基斯坦 (0.6%), 其他 (0.8%), 台灣(<0.1%)", characteristics: "南歐，服務業主導；飲食豐富多樣，海鮮和肉類菜餚居多，如西班牙海鮮燉飯、Tapas。", supermarkets: ["巴塞隆納，約50間", "馬德里，約45間", "Oriental Mart (網購到府配送)", "天天購亞洲食品超市 (網購到府配送)"], wholesalers: ["EMB FOOD", "Asia Food Express", "Union Alimentaria"], totalWholesalers: 10, restaurants: { "中餐": [2500, 3500], "亞洲自助餐": [500, 800], "日本餐": [3000, 4000], "泰國餐": [400, 600], "越南餐": [100, 200], "其他": [300, 500] } },
+            { country: "荷蘭", totalPop: 17.13, immigrantPop: 1.37, immigrantRatio: 8.0, sources: "土耳其 (2.3%), 印尼 (1.5%), 中國 (0.7%), 其他 (3.5%), 台灣(<0.05%)", characteristics: "西歐，貿易樞紐；飲食簡樸，以乳製品和蔬菜為主，如荷蘭鬆餅、乳酪。", supermarkets: ["Amazing Oriental (約25間門市)", "Ochama京東 (網購到府配送)", "Asia Express Food (網購到府配送)", "阿姆斯特丹，約25間", "海牙，約13間"], wholesalers: ["Amazing Oriental Wholesale", "Asia Express Food B.V.", "Lucky Oriental Food"], totalWholesalers: 10, manualSupermarketCount: 55, restaurants: { "中餐": [1500, 2000], "亞洲自助餐": [400, 600], "日本餐": [1000, 1300], "印尼餐": [500, 800], "泰國餐": [300, 500], "越南餐": [80, 150], "其他": [200, 400] } },
             { country: "瑞典", totalPop: 10.10, immigrantPop: 0.61, immigrantRatio: 6.0, sources: "敘利亞/伊拉克 (3.2%), 中國 (0.5%), 泰國 (0.4%), 其他 (1.9%), 台灣(<0.05%)", characteristics: "北歐，難民接收國；飲食以魚類、肉丸和漿果為主，如瑞典肉丸、鯡魚。", supermarkets: ["蘇黎世，約19間", "洛桑，約17間", "日內瓦，約15間", "Asia Markt (網購到府配送)"], wholesalers: ["Oriental Foods AB", "Svenska Orient Livsmedel", "Asia Trade Sweden"], totalWholesalers: 7, restaurants: { "中餐": [600, 800], "亞洲自助餐": [300, 500], "日本餐": [800, 1000], "泰國餐": [400, 600], "越南餐": [50, 150], "其他": [400, 600] } },
             { country: "比利時", totalPop: 11.59, immigrantPop: 0.58, immigrantRatio: 5.0, sources: "土耳其 (1.8%), 印度 (0.9%), 中國 (0.6%), 其他 (1.7%), 台灣(<0.05%)", characteristics: "西歐，歐盟總部所在；飲食以薯條、巧克力和啤酒聞名，如比利時薯條、華夫餅。", supermarkets: ["布魯塞爾，約25間", "安特衛普，約17間", "Ochama京東 (網購到府配送)"], wholesalers: ["FoodAsia Belgium", "Kam Yuen", "Oriental Food Express"], totalWholesalers: 7, restaurants: { "中餐": [1500, 2000], "亞洲自助餐": [300, 500], "日本餐": [800, 1200], "泰國餐": [300, 500], "越南餐": [200, 400], "其他": [200, 400] } },
             { country: "奧地利", totalPop: 9.01, immigrantPop: 0.50, immigrantRatio: 5.5, sources: "土耳其(2.5%), 敘利亞 (1.2%), 中國 (0.4%), 其他 (1.4%), 台灣(<0.05%)", characteristics: "中歐，難民比例高；飲食以糕點和肉類菜餚為主，如維也納炸肉排、薩赫蛋糕。", supermarkets: ["維也納，約45間"], wholesalers: ["ATCO", "Asia Food Express Austria", "Oriental Markt Wien"], totalWholesalers: 6, restaurants: { "中餐": [800, 1200], "亞洲自助餐": [200, 400], "日本餐": [500, 800], "泰國餐": [250, 350], "越南餐": [150, 250], "其他": [200, 350] } },
@@ -161,19 +170,20 @@
             { country: "克羅埃西亞", totalPop: 3.87, immigrantPop: 0.02, immigrantRatio: 0.6, sources: "中國 (0.2%), 菲律賓 (0.2%), 其他 (0.2%), 台灣(<0.05%)", characteristics: "南歐，觀光業主導；飲食以海鮮和地中海風味為主，如Peka。", supermarkets: ["札格瑞布，約7間"], wholesalers: ["Panasia"], totalWholesalers: 2, restaurants: { "中餐": [20, 40], "亞洲自助餐": [5, 15], "日本餐": [10, 20], "泰國餐": [5, 15], "越南餐": [2, 5], "其他": [5, 10] } },
             { country: "保加利亞", totalPop: 6.46, immigrantPop: 0.04, immigrantRatio: 0.6, sources: "中國 (0.2%), 越南/其他 (0.4%), 台灣(<0.05%)", characteristics: "東南歐，工業轉型；飲食以乳製品和蔬菜為主，如保加利亞優格。", supermarkets: ["索非亞，約8間"], wholesalers: ["Asia Food Bulgaria"], totalWholesalers: 2, restaurants: { "中餐": [30, 60], "亞洲自助餐": [10, 20], "日本餐": [20, 40], "泰國餐": [10, 20], "越南餐": [5, 10], "其他": [10, 20] } },
             { country: "羅馬尼亞", totalPop: 19.24, immigrantPop: 0.10, immigrantRatio: 0.5, sources: "中國 (0.2%), 土耳其* (0.1%), 其他 (0.2%), 台灣(<0.05%)", characteristics: "東歐，亞洲人口稀少；飲食以玉米粥和燉肉為主，如薩爾馬。", supermarkets: ["布加勒斯特，約14間"], wholesalers: ["Asia Food Romania"], totalWholesalers: 2, restaurants: { "中餐": [80, 150], "亞洲自助餐": [20, 40], "日本餐": [50, 100], "泰國餐": [30, 60], "越南餐": [10, 20], "其他": [20, 40] } },
-            { country: "斯洛伐克", totalPop: 5.43, immigrantPop: 0.03, immigrantRatio: 0.5, sources: "越南 (0.3%), 中國 (0.1%), 其他 (0.1%), 台灣(<0.05%)", characteristics: "中歐，小型移民群體；飲食以馬鈴薯和乳酪為主，如羊奶酪麵疙瘩。", supermarkets: ["布拉提斯拉瓦，約6間"], wholesalers: ["Asia Food Slovakia"], totalWholesalers: 2, restaurants: { "中餐": [30, 60], "亞洲自助餐": [10, 20], "日本餐": [20, 40], "泰國餐": [10, 20], "越南餐": [10, 20], "其他": [10, 20] } },
+            { country: "斯洛伐克", totalPop: 5.43, immigrantPop: 0.03, immigrantRatio: 0.5, sources: "越南 (0.3%), 中國 (0.1%), 其他 (0.1%), 台灣(<0.05%)", characteristics: "中歐，小型移民群體；飲食以馬鈴薯和乳酪為主，如羊奶酪麵疙瘩。", supermarkets: ["布拉提斯拉瓦，約6間"], wholesalers: ["Asia Food Slovakia"], totalWholesalers: 2, restaurants: { "中餐": [30, 60], "亞洲自助餐": [10, 20], "日本餐": [20, 40], "泰國餐": [10, 20], "越南餐": [10, 20], "其他": [10, 20] } }
+            ,
             { country: "英國 (非歐盟)", totalPop: 67.6, immigrantPop: 5.76, immigrantRatio: 8.6, sources: "印度 (2.9%), 巴基斯坦 (2.5%), 孟加拉 (1.0%), 中國 (0.8%), 其他 (1.5%), 台灣(<0.01%)", characteristics: "西歐，多元文化中心；飲食以炸魚薯條、烤肉和英式早餐為主。", supermarkets: [
                 "Oseyo (最大韓亞連鎖, 約14+間分店)",
-                "Longdan (倫敦多家)",
+                "WingYip(榮業行)",
                 "Tian Tian Market (倫敦多家)",
                 "Seoul Plaza (倫敦及其他城市有分店)",
                 "倫敦，約100-150間",
                 "曼徹斯特，約20-30間",
                 "伯明罕，約15-25間"
-            ], wholesalers: ["Manning Impex", "Wing Yip", "SeeWoo"], totalWholesalers: 40, restaurants: { "中餐": [4000, 6000], "亞洲自助餐": [1000, 1500], "日本餐": [1500, 2500], "泰國餐": [800, 1200], "越南餐": [300, 500], "印度餐": [8000, 10000], "巴基斯坦餐": [3000, 4000], "菲律賓餐": [100, 200], "其他": [1000, 1500] } }
+            ], wholesalers: ["JFC (UK)", "JF Foods(見康食品)", "Manning Impex"], totalWholesalers: 40, manualSupermarketCount: 200, restaurants: { "中餐": [4000, 6000], "亞洲自助餐": [1000, 1500], "日本餐": [1500, 2500], "泰國餐": [800, 1200], "越南餐": [300, 500], "印度餐": [8000, 10000], "巴基斯坦餐": [3000, 4000], "菲律賓餐": [100, 200], "其他": [1000, 1500] } }
         ];
 
-        let immigrantOriginChart, restaurantChart, comparisonChart, restaurantComparisonChart, wholesalerComparisonChart;
+        let immigrantOriginChart, restaurantChart, comparisonChart, supermarketComparisonChart, restaurantComparisonChart, wholesalerComparisonChart;
         
         const chartColors = {
             primary: 'rgba(79, 70, 229, 0.8)',
@@ -194,6 +204,10 @@
 
         // 為「各國亞洲食品批發總數」圖表定義一個新的藍色系調色盤
         const wholesalerComparisonThemeColor = '#3b82f6'; // Blue 500 作為單一主題色
+
+        // 為「各國亞洲超市數量總覽」圖表定義一個新的主題色 (例如：橘色系)
+        const supermarketComparisonThemeColor = '#f97316'; // Orange 500 作為單一主題色
+
 
         /**
          * 解析來源字串，提取標籤和數值。
@@ -225,6 +239,37 @@
         function getAverage(range) {
             if (!range || range.length !== 2) return 0;
             return (range[0] + range[1]) / 2;
+        }
+
+        /**
+         * 估計各國亞洲超市的總數量。
+         * @param {string[]} supermarketsArray - 包含超市資訊的字串陣列。
+         * @returns {number} 估計的超市總數。
+         */
+        function getEstimatedSupermarketCount(supermarketsArray) {
+            let total = 0;
+            supermarketsArray.forEach(item => {
+                // 嘗試匹配 "約X間門市" 或 "約X間" 或 "X間分店"
+                let match = item.match(/約(\d+)\+?間(?:門市|分店)?/);
+                if (!match) {
+                    match = item.match(/(\d+)\+?間(?:門市|分店)?/);
+                }
+                if (!match) {
+                    // 嘗試匹配 "城市，約X間"
+                    match = item.match(/，約(\d+)\+?間/);
+                }
+                if (!match) {
+                    // 嘗試匹配 "城市，X間"
+                    match = item.match(/，(\d+)\+?間/);
+                }
+                
+                if (match && !isNaN(parseInt(match[1]))) {
+                    total += parseInt(match[1]);
+                }
+                // 對於沒有明確數字的連鎖店名稱，如果該國家沒有其他明確數字，可能需要額外處理
+                // 但目前數據集中，大多數有意義的計數都有數字，所以暫時只累計明確數字
+            });
+            return total;
         }
 
         /**
@@ -432,6 +477,89 @@
         }
 
         /**
+         * 初始化各國亞洲超市數量總覽的柱狀圖。
+         */
+        function initializeSupermarketComparisonChart() {
+            const ukData = reportData.find(c => c.country.includes('英國'));
+            const otherCountries = reportData.filter(c => !c.country.includes('英國'));
+
+            const supermarketTotalsForSorting = otherCountries.map(country => {
+                return {
+                    country: country.country,
+                    // 使用 manualSupermarketCount 如果存在，否則使用 getEstimatedSupermarketCount
+                    totalSupermarkets: country.manualSupermarketCount !== undefined ? country.manualSupermarketCount : getEstimatedSupermarketCount(country.supermarkets)
+                };
+            });
+
+            const sortedSupermarketData = [...supermarketTotalsForSorting].sort((a, b) => b.totalSupermarkets - a.totalSupermarkets);
+
+            if (ukData) {
+                sortedSupermarketData.push({
+                    country: ukData.country,
+                    // 使用 manualSupermarketCount 如果存在，否則使用 getEstimatedSupermarketCount
+                    totalSupermarkets: ukData.manualSupermarketCount !== undefined ? ukData.manualSupermarketCount : getEstimatedSupermarketCount(ukData.supermarkets)
+                });
+            }
+
+            const labels = sortedSupermarketData.map(d => d.country);
+            const values = sortedSupermarketData.map(d => d.totalSupermarkets);
+
+            if (supermarketComparisonChart) supermarketComparisonChart.destroy();
+            supermarketComparisonChart = new Chart(document.getElementById('supermarket-comparison-chart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '亞洲超市總數量 (估計)',
+                        data: values,
+                        backgroundColor: (context) => {
+                            return context.chart.data.labels[context.dataIndex].includes('英國') ? chartColors.accent : supermarketComparisonThemeColor;
+                        },
+                        borderColor: (context) => {
+                            return context.chart.data.labels[context.dataIndex].includes('英國') ? chartColors.accent : supermarketComparisonThemeColor;
+                        },
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = Math.round(context.raw);
+                                    return `${label}: 約 ${value} 間`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '亞洲超市總數量 (估計)'
+                            },
+                            grid: {
+                                color: 'rgba(203, 213, 225, 0.3)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        /**
          * 初始化各國亞洲餐廳數量總覽的柱狀圖（非堆疊），並使用單一主題顏色。
          */
         function initializeRestaurantComparisonChart() {
@@ -627,12 +755,12 @@
             selector.value = '德國';
             updateDashboard('德國');
             initializeComparisonChart();
-            initializeRestaurantComparisonChart(); // 初始化新的餐廳數量總覽圖表
-            initializeWholesalerComparisonChart(); // 初始化新的批發商數量總覽圖表
+            initializeSupermarketComparisonChart(); // 初始化新的超市數量總覽圖表
+            initializeRestaurantComparisonChart(); // 初始化餐廳數量總覽圖表
+            initializeWholesalerComparisonChart(); // 初始化批發商數量總覽圖表
         });
 
     </script>
-
 
 </body>
 </html>
